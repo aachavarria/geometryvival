@@ -13,6 +13,7 @@ var game_over: bool = false
 
 # Server-side damage cooldown per player
 var damage_cooldown: Dictionary = {}
+var health_timer: float = 0.0
 
 @onready var players_node: Node2D = $Players
 @onready var enemies_node: Node2D = $Enemies
@@ -26,6 +27,10 @@ func _ready():
 	game_over_label.visible = false
 
 	if multiplayer.is_server():
+		# Agones: set capacity and signal we're ready to receive players
+		AgonesSDK.set_player_capacity(16)
+		AgonesSDK.ready()
+
 		# Spawn the server's own player
 		_spawn_player(1)
 		# Handle future connections
@@ -45,9 +50,8 @@ func _request_spawn():
 	if not players_node.has_node(str(id)):
 		_spawn_player(id)
 
-func _on_player_connected(_id: int):
-	# Don't spawn yet — wait for client's _request_spawn RPC
-	pass
+func _on_player_connected(id: int):
+	AgonesSDK.player_connect(str(id))
 
 func _spawn_player(id: int):
 	var player = PLAYER_SCENE.instantiate()
@@ -62,6 +66,7 @@ func _remove_player(id: int):
 	if player:
 		player.queue_free()
 	damage_cooldown.erase(id)
+	AgonesSDK.player_disconnect(str(id))
 
 func _physics_process(delta: float):
 	survival_time += delta
@@ -71,6 +76,12 @@ func _physics_process(delta: float):
 		return
 	if game_over:
 		return
+
+	# Agones health ping every 60 seconds
+	health_timer += delta
+	if health_timer >= 60.0:
+		health_timer = 0.0
+		AgonesSDK.health()
 
 	# Difficulty ramp: shorter spawn interval over time
 	difficulty_timer += delta
@@ -166,6 +177,8 @@ func _show_game_over(time: int):
 	game_over = true
 	game_over_label.text = "GAME OVER\nSurvived: %d seconds\n\nPress ESC to return to menu" % time
 	game_over_label.visible = true
+	if multiplayer.is_server():
+		AgonesSDK.shutdown()
 
 func _update_hud():
 	time_label.text = "Time: %d s" % int(survival_time)

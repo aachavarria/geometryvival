@@ -17,6 +17,11 @@ config/features=PackedStringArray("4.6", "GL Compatibility")
 [autoload]
 
 NetworkManager="*res://scripts/network_manager.gd"
+AgonesSDK="*res://addons/agones/agones_sdk.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/agones/plugin.cfg")
 
 [display]
 
