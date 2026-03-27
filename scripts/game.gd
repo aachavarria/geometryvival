@@ -27,13 +27,13 @@ func _ready():
 	game_over_label.visible = false
 
 	if multiplayer.is_server():
-		# Agones: set capacity and signal we're ready to receive players
 		AgonesSDK.set_player_capacity(16)
 		AgonesSDK.ready()
 
-		# Spawn the server's own player
-		_spawn_player(1)
-		# Handle future connections
+		# Dedicated server: don't spawn a player for the server itself
+		if not _is_dedicated_server():
+			_spawn_player(1)
+
 		NetworkManager.player_connected.connect(_on_player_connected)
 		NetworkManager.player_disconnected.connect(_remove_player)
 		info_label.text = "SERVER | Port %d" % NetworkManager.DEFAULT_PORT
@@ -60,6 +60,9 @@ func _spawn_player(id: int):
 	players_node.add_child(player, true)
 	player.set_multiplayer_authority(id)
 	print("[Game] Spawned player %d" % id)
+
+func _is_dedicated_server() -> bool:
+	return "--server" in OS.get_cmdline_args() or DisplayServer.get_name() == "headless"
 
 func _remove_player(id: int):
 	var player = players_node.get_node_or_null(str(id))
@@ -160,7 +163,8 @@ func _check_collisions():
 		enemy.queue_free()
 
 func _check_game_over():
-	if players_node.get_child_count() == 0:
+	# Don't trigger if no players have joined yet
+	if players_node.get_child_count() == 0 or survival_time < 3.0:
 		return
 
 	for player in players_node.get_children():
