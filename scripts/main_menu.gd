@@ -14,7 +14,7 @@ func _ready():
 
 func _start_dedicated_server():
 	NetworkManager.host_game(NetworkManager.DEFAULT_PORT)
-	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	get_tree().change_scene_to_file.call_deferred("res://scenes/game.tscn")
 
 func _on_online_pressed():
 	var username = username_input.text.strip_edges()
