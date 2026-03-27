@@ -9,14 +9,10 @@ async function allocateGameServer(players: string[]): Promise<{ address: string;
 
   if (!gameId || !apiKey) throw new Error("GAMEFLOW_GAME_ID and GAMEFLOW_API_KEY must be set");
 
-  const res = await fetch(`${GAMEFLOW_API_URL}/games/${encodeURIComponent(gameId)}/servers`, {
+  const res = await fetch(`${GAMEFLOW_API_URL}/fleets/${encodeURIComponent(gameId)}/allocate`, {
     method: "POST",
     headers: { "X-Api-Key": apiKey, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      timeoutSeconds: 0,
-      region: "us-east",
-      payload: JSON.stringify({ players }),
-    }),
+    body: JSON.stringify({ payload: JSON.stringify({ players }) }),
   });
 
   if (!res.ok) throw new Error(`GameFlow error (${res.status}): ${await res.text()}`);
