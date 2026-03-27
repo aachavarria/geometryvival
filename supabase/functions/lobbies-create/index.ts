@@ -7,7 +7,7 @@ async function generateUniqueCode(supabase: ReturnType<typeof createClient>): Pr
     const { data } = await supabase.from("lobbies").select("id").eq("code", code).maybeSingle();
     if (!data) return code;
   }
-  throw new Error("Could not generate unique code");
+  throw new Error("Could not generate a unique lobby code after 20 attempts");
 }
 
 Deno.serve(async (req) => {
@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
 
   const body = await req.json().catch(() => ({}));
-  const is_private = body.is_private ?? false;
+  const is_private: boolean = body.is_private ?? false;
 
   const { data: account } = await supabase
     .from("accounts").select("*").eq("user_id", user.id).single();
@@ -43,14 +43,19 @@ Deno.serve(async (req) => {
 
   if (lobbyError) return Response.json({ error: lobbyError.message }, { status: 500, headers: corsHeaders });
 
-  // Add owner as first player
-  await supabase.from("lobby_players").insert({
+  // Add the owner as the first player. Roll back the lobby if this fails.
+  const { error: playerError } = await supabase.from("lobby_players").insert({
     lobby_id: lobby.id,
     account_id: account.id,
     username: account.username,
     team: "A",
     ready: false,
   });
+
+  if (playerError) {
+    await supabase.from("lobbies").delete().eq("id", lobby.id);
+    return Response.json({ error: playerError.message }, { status: 500, headers: corsHeaders });
+  }
 
   return Response.json({ lobby }, { headers: corsHeaders });
 });

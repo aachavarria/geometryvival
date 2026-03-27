@@ -17,7 +17,8 @@ Deno.serve(async (req) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
 
-  const { lobby_id, ready } = await req.json();
+  const { lobby_id, ready } = await req.json().catch(() => ({}));
+  if (!lobby_id) return Response.json({ error: "lobby_id required" }, { status: 400, headers: corsHeaders });
 
   const { data: account } = await supabase
     .from("accounts").select("id").eq("user_id", user.id).single();

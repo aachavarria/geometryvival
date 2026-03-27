@@ -17,22 +17,22 @@ Deno.serve(async (req) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
 
-  const { lobby_id } = await req.json();
+  const { lobby_id } = await req.json().catch(() => ({}));
+  if (!lobby_id) return Response.json({ error: "lobby_id required" }, { status: 400, headers: corsHeaders });
 
   const { data: account } = await supabase
     .from("accounts").select("id").eq("user_id", user.id).single();
   if (!account) return Response.json({ error: "Account not found" }, { status: 404, headers: corsHeaders });
 
-  // Remove player from lobby
+  // Remove the player from the lobby.
   await supabase.from("lobby_players")
     .delete()
     .eq("lobby_id", lobby_id)
     .eq("account_id", account.id);
 
-  // Check if lobby is now empty
+  // Delete the lobby if it is now empty.
   const { data: remaining } = await supabase
     .from("lobby_players").select("id").eq("lobby_id", lobby_id);
-
   if (!remaining || remaining.length === 0) {
     await supabase.from("lobbies").delete().eq("id", lobby_id);
   }

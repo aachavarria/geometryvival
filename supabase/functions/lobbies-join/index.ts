@@ -17,27 +17,28 @@ Deno.serve(async (req) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders });
 
-  const { lobby_id, code } = await req.json();
+  const { lobby_id, code } = await req.json().catch(() => ({}));
+  if (!lobby_id && !code) {
+    return Response.json({ error: "lobby_id or code required" }, { status: 400, headers: corsHeaders });
+  }
 
   const { data: account } = await supabase
     .from("accounts").select("*").eq("user_id", user.id).single();
   if (!account) return Response.json({ error: "Account not found" }, { status: 404, headers: corsHeaders });
 
-  // Find lobby by id or code
+  // Find the lobby by ID or invite code.
   let query = supabase.from("lobbies").select("*").eq("status", "waiting");
   if (lobby_id) query = query.eq("id", lobby_id);
-  else if (code) query = query.eq("code", code);
-  else return Response.json({ error: "lobby_id or code required" }, { status: 400, headers: corsHeaders });
+  else          query = query.eq("code", code);
 
   const { data: lobby } = await query.single();
   if (!lobby) return Response.json({ error: "Lobby not found" }, { status: 404, headers: corsHeaders });
 
-  // Count players to determine team
+  // Balance teams: assign to whichever team has fewer players.
   const { data: players } = await supabase
     .from("lobby_players").select("team").eq("lobby_id", lobby.id);
-
-  const teamA = players?.filter(p => p.team === "A").length ?? 0;
-  const teamB = players?.filter(p => p.team === "B").length ?? 0;
+  const teamA = players?.filter((p) => p.team === "A").length ?? 0;
+  const teamB = players?.filter((p) => p.team === "B").length ?? 0;
   const team = teamA <= teamB ? "A" : "B";
 
   const { error } = await supabase.from("lobby_players").insert({

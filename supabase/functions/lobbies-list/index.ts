@@ -14,6 +14,10 @@ Deno.serve(async (req) => {
     { global: { headers: { Authorization: `Bearer ${jwt}` } } }
   );
 
+  // Delete stale lobbies older than 2 hours before listing
+  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+  await supabase.from("lobbies").delete().lt("created_at", twoHoursAgo);
+
   const { data: lobbies, error } = await supabase
     .from("lobbies")
     .select(`
