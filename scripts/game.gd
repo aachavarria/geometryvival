@@ -33,7 +33,6 @@ func _ready():
 		if _is_dedicated_server():
 			_agones = AGONES_SCENE.new()
 			add_child(_agones)
-			_agones.set_player_capacity(16)
 			_agones.ready()
 
 		# Dedicated server: don't spawn a player for the server itself
