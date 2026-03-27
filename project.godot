@@ -18,10 +18,11 @@ config/features=PackedStringArray("4.6", "GL Compatibility")
 
 NetworkManager="*res://scripts/network_manager.gd"
 AgonesSDK="*res://addons/agones/agones_sdk.gd"
+SupabaseManager="*res://scripts/supabase_manager.gd"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/agones/plugin.cfg")
+enabled=PackedStringArray("res://addons/agones/plugin.cfg", "res://addons/supabase/plugin.cfg")
 
 [display]
 

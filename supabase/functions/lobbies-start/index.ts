@@ -65,8 +65,12 @@ Deno.serve(async (req) => {
   const playerIds = players.map(p => p.account_id);
   const server = await allocateGameServer(playerIds);
 
-  // Mark lobby as started
-  await supabase.from("lobbies").update({ status: "started" }).eq("id", lobby_id);
+  // Mark lobby as started and store server info (triggers Realtime for all clients)
+  await supabase.from("lobbies").update({
+    status: "started",
+    server_address: server.address,
+    server_port: server.port,
+  }).eq("id", lobby_id);
 
   return Response.json({
     server: { address: server.address, port: server.port },

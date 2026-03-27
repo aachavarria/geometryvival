@@ -3,6 +3,9 @@
 *.import
 build/
 
+.DS_Store
+game-backend-template/
+
 # Supabase
 supabase/functions/.env.local
 supabase/.branches/
