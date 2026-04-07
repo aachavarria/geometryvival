@@ -212,7 +212,7 @@ The output is `build/game.pck` (as configured in `export_presets.cfg`).
 
 ### 3. Upload to GameFlow
 
-Go to the [GameFlow dashboard](https://app.gameflow.gg), select your game, and upload `build/game.pck` as a `.zip`.
+Go to the [GameFlow dashboard](https://app.gameflow.gg), select your game, and upload `build/game.pck`.
 
 > Every time you change server-side code (anything in `scripts/`), you need to re-export and re-upload the `.pck`. The game ID may change with each new upload — update `GAMEFLOW_GAME_ID` in `.env.local` accordingly.
 
